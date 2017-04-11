@@ -1,0 +1,27 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TCPService", "TCPService.csproj", "{9A04B8FE-B0C0-44A4-A6FA-D85EDE7DD149}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "TCPServiceSetup", "..\TCPServiceSetup\TCPServiceSetup.vdproj", "{58B3817A-21A6-49F7-990D-B7BDA1AC5B47}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Release = Release
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{9A04B8FE-B0C0-44A4-A6FA-D85EDE7DD149}.Debug.ActiveCfg = Debug|.NET
+		{9A04B8FE-B0C0-44A4-A6FA-D85EDE7DD149}.Debug.Build.0 = Debug|.NET
+		{9A04B8FE-B0C0-44A4-A6FA-D85EDE7DD149}.Release.ActiveCfg = Release|.NET
+		{9A04B8FE-B0C0-44A4-A6FA-D85EDE7DD149}.Release.Build.0 = Release|.NET
+		{58B3817A-21A6-49F7-990D-B7BDA1AC5B47}.Debug.ActiveCfg = Debug
+		{58B3817A-21A6-49F7-990D-B7BDA1AC5B47}.Release.ActiveCfg = Release
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal
