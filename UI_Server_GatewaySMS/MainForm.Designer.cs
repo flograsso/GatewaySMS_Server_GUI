@@ -102,7 +102,7 @@ namespace UI_Server_GatewaySMS
 			this.Controls.Add(this.button1);
 			this.Controls.Add(this.label1);
 			this.Name = "MainForm";
-			this.Text = "Client_test";
+			this.Text = "Gateway SMS Server";
 			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainFormFormClosed);
 			this.Load += new System.EventHandler(this.MainFormLoad);
 			this.ResumeLayout(false);
