@@ -1,8 +1,12 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO.Ports;
 using System.Net;
+using System.Net.Http;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 using System.Collections;
 using System.IO;
@@ -32,9 +36,9 @@ namespace UI_Server_GatewaySMS
 		public static GSM_Module gsm_module = new GSM_Module(ref serialPort);
 		
 		
+		private static readonly HttpClient client = new HttpClient();
 		
-		
-		
+		public Logger logger = new Logger();
 		
 		/// <summary>
 		/// Local Variables Declaration.
@@ -104,7 +108,9 @@ namespace UI_Server_GatewaySMS
 				m_server=null;
 			}
 		}
-
+		public bool isServerRunning(){
+			return !m_stopServer;
+		}
 		/// <summary>
 		/// Method that starts TCP/IP Server.
 		/// </summary>
@@ -290,23 +296,106 @@ namespace UI_Server_GatewaySMS
 		}
 		
 		private void processingQueueThreadStart(){
+			
+			Message aux;
+			bool enviado;
+			int errorCount = 0;
+			
 			while(!m_stopProccesing){
-				Message aux;
+				
+				enviado=false;
+				errorCount=0;
 				
 				TCPServer.queue.TryDequeue(out aux);
-				
 
-				//Le saco los fin de linea xq sino no anda
-				if (gsm_module.connectSIM900() && gsm_module.enviarSMS(aux.numero.Replace("\r\n", string.Empty),aux.mensaje.Replace("\r\n", string.Empty)))
-				{
-					MessageBox.Show("Mensaje enviado");
-				}
-				else
-				{
-					MessageBox.Show("Mensaje NO enviado");
+				while (!enviado && (errorCount<3)){
+					
+					//Le saco los fin de linea xq sino no anda
+					
+					if (gsm_module.enviarSMS(aux.numero.Replace("\r\n", string.Empty),aux.mensaje.Replace("\r\n", string.Empty)))
+					{
+						enviado = true;
+						logger.logData("Mensaje Enviado. Numero: "+aux.numero.Replace("\r\n", string.Empty)+ " Mensaje: "+aux.mensaje.Replace("\r\n", string.Empty));
+					}
+					else
+					{
+						logger.logData("ERROR (Intento "+errorCount+"/3) : Mensaje NO Enviado. Numero: "+aux.numero.Replace("\r\n", string.Empty)+ "Mensaje: "+aux.mensaje.Replace("\r\n", string.Empty));
+						
+						gsm_module.connectSIM900();
+						gsm_module.setSignal();
+						gsm_module.prepareSMS();
+						
+					}
+					errorCount++;
+					
 				}
 				
+				if (!enviado){
+					sendErrorEmail();
+				}
 			}
+			
+		}
+		
+		
+		public static void sendHTTPResponse(){
+			
+			/*VERSION 1*/
+			
+			HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://127.0.0.1:31001");
+			request.Method = "POST";
+			request.ServicePoint.Expect100Continue = false;
+			request.ContentType = "application/x-www-form-urlencoded";
+			request.Timeout = 10000;
+
+			request.Headers.Add("Param: prueba");
+
+			string postData = "postData";
+			ASCIIEncoding encoding = new ASCIIEncoding();
+			byte[] byte1 = encoding.GetBytes(postData);
+			request.ContentLength = byte1.Length;
+			Stream reqStream = request.GetRequestStream();
+			reqStream.Write(byte1, 0, byte1.Length);
+			reqStream.Close();
+			
+			/*VERSION 2. MAS FACIL Y FUNCIONA*/
+			/*
+			try
+			{
+				var post = new NameValueCollection();
+				post.Add("devid", "v1C08EE53692D300");
+
+				using (var wc = new WebClient())
+				{
+					wc.UploadValues("http://api.pushingbox.com/pushingbox", post);
+				}
+				
+				post = null;
+			}
+			catch (WebException we)
+			{}
+			 */
+			
+
+		}
+		
+		/*Envio un request a la API de pushingbox quien me envia un mail*/
+		public void sendErrorEmail()
+		{
+			try
+			{
+				var post = new NameValueCollection();
+				post.Add("devid", "v1C08EE53692D300");
+
+				using (var wc = new WebClient())
+				{
+					wc.UploadValues("http://api.pushingbox.com/pushingbox", post);
+				}
+				
+				post = null;
+			}
+			catch (WebException we)
+			{}
 		}
 		
 

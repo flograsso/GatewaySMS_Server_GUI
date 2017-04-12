@@ -44,6 +44,8 @@ namespace UI_Server_GatewaySMS
 		}
 		void Button1Click(object sender, EventArgs e)
 		{
+			int i = 0;
+			bool ok = false;
 			label3.Text="INICIANDO...";
 			this.Refresh();
 			
@@ -63,11 +65,17 @@ namespace UI_Server_GatewaySMS
 				MessageBox.Show("Puerto COM incorrecto","ERROR",MessageBoxButtons.OK,MessageBoxIcon.Exclamation);
 			}
 			
-			
-			if (TCPServer.gsm_module.connectSIM900() && TCPServer.gsm_module.setSignal() && TCPServer.gsm_module.prepareSMS()){
+			while (i < 3 && !ok)
+			{
+				if (TCPServer.gsm_module.connectSIM900() && TCPServer.gsm_module.setSignal() && TCPServer.gsm_module.prepareSMS())
+				{
+					ok=true;
+				}
+				i++;
+			}
+			if (ok){
 				label3.Text="RUNNING...";
 			}
-
 			else
 			{
 				label3.Text="DESCONECTADO";
@@ -77,7 +85,11 @@ namespace UI_Server_GatewaySMS
 		void MainFormFormClosed(object sender, FormClosedEventArgs e)
 		{
 			label3.Text="CERRANDO...";
-			server.StopServer();
+			/*Si le hago el stop y no esta creado. Se queda ahi*/
+			if (server != null && server.isServerRunning()){
+				server.StopServer();
+			}
+			
 			/*Cierro el serial*/
 			try{
 				if(TCPServer.serialPort.IsOpen){
@@ -93,6 +105,7 @@ namespace UI_Server_GatewaySMS
 		{
 			this.Close();
 		}
+
 		
 
 		

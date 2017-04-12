@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<SettingsFile CurrentProfile="(Default)" GeneratedClassNamespace="Client_test" GeneratedClassName="Settings1" xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings">
+  <Profiles>
+    <Profile Name="(Default)" />
+  </Profiles>
+  <Settings>
+    <Setting Name="logFileName" Type="System.String" Scope="User" Roaming="false">
+      <Value Profile="(Default)">log-1</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

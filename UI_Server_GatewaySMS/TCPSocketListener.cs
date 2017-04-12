@@ -91,13 +91,26 @@ namespace UI_Server_GatewaySMS
 					size = m_clientSocket.Receive(byteBuffer);
 					m_currentReceiveDateTime=DateTime.Now;
 					ParseReceiveBuffer(byteBuffer, size);
+					
+					/*Si encontro ambos parametros. Encolo*/
 					if (httpHeaders.ContainsKey("numero") && httpHeaders.ContainsKey("mensaje") )
-					    {
-					    	Message message = new Message(httpHeaders["numero"],httpHeaders["mensaje"]);
-					    	TCPServer.queue.Enqueue(message);
-					    }
-					     
+					{
+						Message message = new Message(httpHeaders["numero"],httpHeaders["mensaje"]);
+						TCPServer.queue.Enqueue(message);
+
+						
+						/*RESPUESTA DE MENSAJE RECIBIDO*/
+						/*
+						try
+						{
+							byte[] toBytes = Encoding.ASCII.GetBytes("Message Received");
+							m_clientSocket.Send(toBytes);
+						}
+						catch(SocketException se){}
+						*/
 					}
+					
+				}
 				catch (SocketException se)
 				{
 					m_stopClient=true;
@@ -169,11 +182,16 @@ namespace UI_Server_GatewaySMS
 				lineEndIndex =	data.IndexOf("\r\n");
 				if(lineEndIndex != -1)
 				{
-					m_oneLineBuf=m_oneLineBuf.Append(data,0,lineEndIndex+2);			
+					m_oneLineBuf=m_oneLineBuf.Append(data,0,lineEndIndex+2);
+					
+					//MessageBox.Show(m_oneLineBuf.ToString());
+					
 					readHeaders(m_oneLineBuf.ToString());
 					m_oneLineBuf.Remove(0,m_oneLineBuf.Length);
 					data = data.Substring(lineEndIndex+2,
 					                      data.Length -lineEndIndex-2);
+					
+
 				}
 				else
 				{
@@ -184,6 +202,10 @@ namespace UI_Server_GatewaySMS
 			
 		}
 		
+		/// <summary>
+		/// Busca los parametros numero y mensaje en el POST y los guarda en httpHeaders
+		/// </summary>
+		/// <param name="leido: string recibido (1 linea)"></param>
 		public void readHeaders(string leido) {
 			
 
