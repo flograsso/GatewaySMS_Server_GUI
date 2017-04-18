@@ -22,7 +22,6 @@ namespace UI_Server_GatewaySMS.Components
 		
 		public MensajeJson()
 		{
-			
 		}
 	}
 }
