@@ -29,6 +29,7 @@ namespace UI_Server_GatewaySMS
 		/// </summary>
 		
 		public static IPAddress DEFAULT_SERVER = IPAddress.Parse("127.0.0.1");
+		//public static IPAddress DEFAULT_SERVER = IPAddress.Parse("163.10.123.161");
 		public static int DEFAULT_PORT=31001;
 		public static IPEndPoint DEFAULT_IP_END_POINT = new IPEndPoint(DEFAULT_SERVER, DEFAULT_PORT);
 		public static BlockingQueue<Message> queue;
@@ -38,7 +39,7 @@ namespace UI_Server_GatewaySMS
 		
 		private static readonly HttpClient client = new HttpClient();
 		
-		public Logger logger = new Logger();
+		public static Logger logger = new Logger();
 		
 		/// <summary>
 		/// Local Variables Declaration.
@@ -103,7 +104,7 @@ namespace UI_Server_GatewaySMS
 						TCPSocketListener.DEFAULT_FILE_STORE_LOC);
 				}
 			}
-			catch(Exception e)
+			catch(Exception)
 			{
 				m_server=null;
 			}
@@ -245,7 +246,7 @@ namespace UI_Server_GatewaySMS
 					// thread.
 					socketListener.StartSocketListener();
 				}
-				catch (SocketException se)
+				catch (SocketException)
 				{
 					m_stopServer = true;
 				}
@@ -295,6 +296,7 @@ namespace UI_Server_GatewaySMS
 			}
 		}
 		
+		
 		private void processingQueueThreadStart(){
 			
 			Message aux;
@@ -307,6 +309,8 @@ namespace UI_Server_GatewaySMS
 				errorCount=0;
 				
 				TCPServer.queue.TryDequeue(out aux);
+				
+				MessageBox.Show(aux.numero + aux.mensaje);
 
 				while (!enviado && (errorCount<3)){
 					
@@ -319,7 +323,7 @@ namespace UI_Server_GatewaySMS
 					}
 					else
 					{
-						logger.logData("ERROR (Intento "+errorCount+"/3) : Mensaje NO Enviado. Numero: "+aux.numero.Replace("\r\n", string.Empty)+ "Mensaje: "+aux.mensaje.Replace("\r\n", string.Empty));
+						logger.logData("ERROR (Intento "+(errorCount+1)+"/3) : Mensaje NO Enviado. Numero: "+aux.numero.Replace("\r\n", string.Empty)+ "Mensaje: "+aux.mensaje.Replace("\r\n", string.Empty));
 						
 						gsm_module.connectSIM900();
 						gsm_module.setSignal();
@@ -394,7 +398,7 @@ namespace UI_Server_GatewaySMS
 				
 				post = null;
 			}
-			catch (WebException we)
+			catch (WebException)
 			{}
 		}
 		

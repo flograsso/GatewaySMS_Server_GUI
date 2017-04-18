@@ -38,8 +38,9 @@ namespace UI_Server_GatewaySMS
 		}
 		void MainFormLoad(object sender, EventArgs e)
 		{
-
-
+			button1.Enabled=false;
+			Button1Click(sender,e);
+			
 			
 		}
 		void Button1Click(object sender, EventArgs e)
@@ -50,35 +51,49 @@ namespace UI_Server_GatewaySMS
 			this.Refresh();
 			
 			try{
-				if(!TCPServer.serialPort.IsOpen){
-					TCPServer.serialPort.Close();
+				while (i < 3 && !ok)
+				{
 					TCPServer.serialPort.PortName=textBox_serialport.Text;
-					TCPServer.serialPort.Open();
+					if(!TCPServer.serialPort.IsOpen){
+						TCPServer.serialPort.Close();
+						TCPServer.serialPort.PortName=textBox_serialport.Text;
+						TCPServer.serialPort.Open();
+						TCPServer.logger.logData("CONECTADO AL PUERTO "+textBox_serialport.Text);
+						
+						if (TCPServer.gsm_module.connectSIM900() && TCPServer.gsm_module.setSignal() && TCPServer.gsm_module.prepareSMS())
+						{
+							ok=true;
+						}
+						i++;
+					}
 					
-					// Create the Server Object ans Start it.
-					server = new TCPServer();
-					server.StartServer();
+					System.Threading.Thread.Sleep(1000);
+					
+
 					
 				}
 			}
 			catch(Exception){
+				TCPServer.logger.logData("ERROR : Puerto COM Incorrecto");
 				MessageBox.Show("Puerto COM incorrecto","ERROR",MessageBoxButtons.OK,MessageBoxIcon.Exclamation);
 			}
 			
-			while (i < 3 && !ok)
-			{
-				if (TCPServer.gsm_module.connectSIM900() && TCPServer.gsm_module.setSignal() && TCPServer.gsm_module.prepareSMS())
-				{
-					ok=true;
-				}
-				i++;
-			}
+
 			if (ok){
+				// Create the Server Object ans Start it.
+				server = new TCPServer();
+				server.StartServer();
+				button1.Enabled=false;
+				textBox_serialport.Enabled=false;
 				label3.Text="RUNNING...";
+				TCPServer.logger.logData("CONECTADO AL MODULO GSM");
 			}
 			else
 			{
 				label3.Text="DESCONECTADO";
+				button1.Enabled=true;
+				textBox_serialport.Enabled=true;
+				TCPServer.logger.logData("ERROR : No se pudo conectar con el modulo GSM");
 			}
 			
 		}

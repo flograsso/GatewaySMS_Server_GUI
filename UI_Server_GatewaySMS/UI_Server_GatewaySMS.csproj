@@ -34,6 +34,12 @@
     <Reference Include="Microsoft.CSharp">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
+    <Reference Include="NUnitLite">
+      <HintPath>..\..\..\..\Desktop\Json35r5\Src\Lib\NUnitLite.dll</HintPath>
+    </Reference>
+    <Reference Include="ServiceStack.Text">
+      <HintPath>..\packages\ServiceStack.Text.3.9.71\lib\net35\ServiceStack.Text.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -51,8 +57,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="GSM_Module.cs" />
-    <Compile Include="Logger.cs" />
+    <Compile Include="Components\GSM_Module.cs" />
+    <Compile Include="Components\MensajeJson.cs" />
+    <Compile Include="Components\Logger.cs" />
+    <Compile Include="Components\Queue.cs" />
+    <Compile Include="Components\TCPServer.cs" />
+    <Compile Include="Components\TCPSocketListener.cs" />
     <Compile Include="MainForm.cs" />
     <Compile Include="MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
@@ -63,21 +73,31 @@
       <DependentUpon>Settings1.settings</DependentUpon>
       <AutoGen>True</AutoGen>
     </Compile>
-    <Compile Include="Queue.cs" />
-    <Compile Include="TCPServer.cs" />
-    <Compile Include="TCPSocketListener.cs" />
+    <Compile Include="Resource1.Designer.cs">
+      <DependentUpon>Resource1.resx</DependentUpon>
+      <AutoGen>True</AutoGen>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
+    <None Include="packages.config" />
+    <None Include="Properties\app.config" />
     <None Include="Properties\Settings1.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings1.Designer.cs</LastGenOutput>
     </None>
+    <None Include="Components\scriptcs\JsonMain.csx" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resource1.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resource1.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Components" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

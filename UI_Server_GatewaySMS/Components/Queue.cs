@@ -18,17 +18,13 @@ namespace UI_Server_GatewaySMS
 	{
 		public string numero;
 
-		
 		public string mensaje;
-			
-			public Message(string nro, string msj){
+		
+		
+		public Message(string nro, string msj){
 			numero=nro;
 			mensaje=msj;
 		}
-		
-		
-
-		
 
 		
 	}

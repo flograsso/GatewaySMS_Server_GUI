@@ -6,6 +6,9 @@ using System.Threading;
 using System.Text;
 using System.IO;
 using System.Windows.Forms;
+using UI_Server_GatewaySMS.Components;
+using ServiceStack.Text;
+
 
 namespace UI_Server_GatewaySMS
 {
@@ -33,7 +36,7 @@ namespace UI_Server_GatewaySMS
 		private DateTime m_lastReceiveDateTime;
 		private DateTime m_currentReceiveDateTime;
 		
-		Dictionary<string, string> httpHeaders = new Dictionary<string, string>();
+		//Dictionary<string, string> httpHeaders = new Dictionary<string, string>();
 		
 		
 		/// <summary>
@@ -90,28 +93,32 @@ namespace UI_Server_GatewaySMS
 				{
 					size = m_clientSocket.Receive(byteBuffer);
 					m_currentReceiveDateTime=DateTime.Now;
-					ParseReceiveBuffer(byteBuffer, size);
+					var mensaje =ParseReceiveBuffer(byteBuffer, size);
+					if(mensaje!=null){
+						Message message = new Message(mensaje.numero,mensaje.mensaje);
+						TCPServer.queue.Enqueue(message);
+					}
 					
-					/*Si encontro ambos parametros. Encolo*/
+					
+					/*Si encontro ambos parametros. Encolo
 					if (httpHeaders.ContainsKey("numero") && httpHeaders.ContainsKey("mensaje") )
 					{
-						Message message = new Message(httpHeaders["numero"],httpHeaders["mensaje"]);
-						TCPServer.queue.Enqueue(message);
+						
 
 						
-						/*RESPUESTA DE MENSAJE RECIBIDO*/
-						/*
+						/*RESPUESTA DE MENSAJE RECIBIDO
+						
 						try
 						{
 							byte[] toBytes = Encoding.ASCII.GetBytes("Message Received");
 							m_clientSocket.Send(toBytes);
 						}
 						catch(SocketException se){}
-						*/
+						
 					}
-					
+					 */
 				}
-				catch (SocketException se)
+				catch (SocketException)
 				{
 					m_stopClient=true;
 					m_markedForDeletion=true;
@@ -167,16 +174,44 @@ namespace UI_Server_GatewaySMS
 		/// </summary>
 		/// <param name="byteBuffer"></param>
 		/// <param name="size"></param>
-		public void ParseReceiveBuffer(Byte [] byteBuffer, int size)
+		public MensajeJson ParseReceiveBuffer(Byte [] byteBuffer, int size)
 		{
 			string data = Encoding.ASCII.GetString(byteBuffer,0, size);
-			int lineEndIndex = 0;
 			
-
+			MessageBox.Show(data);
+			
+			//Si encontre el "{"
+			if(data.IndexOf("{") != -1){
+				string aux = data.Remove(0,data.IndexOf("{"));
+				try{
+					var mensaje=JsonSerializer.DeserializeFromString<MensajeJson>(aux);
+					MessageBox.Show("Mensaje: "+mensaje.mensaje+"Numero: "+mensaje.numero);
+					return mensaje;
+				}
+				catch(Exception){return null;}
+				
+				
+			}
+			else
+			{
+				return null;
+			}
+			
+		}
+		
+		
+		
+		
+		
+		
+		
+		/*
+		 * OLD CODE
 			// Check whether data from client has more than one line of
 			// information, where each line of information ends with "CRLF"
 			// ("\r\n"). If so break data into different lines and process
 			// separately.
+			int lineEndIndex=0;
 			do
 			{
 				lineEndIndex =	data.IndexOf("\r\n");
@@ -200,8 +235,13 @@ namespace UI_Server_GatewaySMS
 				}
 			}while(lineEndIndex != -1);
 			
-		}
+		 */
 		
+		
+		
+
+		/*
+		 * OLD CODE
 		/// <summary>
 		/// Busca los parametros numero y mensaje en el POST y los guarda en httpHeaders
 		/// </summary>
@@ -231,7 +271,9 @@ namespace UI_Server_GatewaySMS
 		}
 		
 
-
+		 */
+		
+		
 		/// <summary>
 		/// Method that checks whether there are any client calls for the
 		/// last 15 seconds or not. If not this client SocketListener will
@@ -250,4 +292,5 @@ namespace UI_Server_GatewaySMS
 			}
 		}
 	}
+
 }
