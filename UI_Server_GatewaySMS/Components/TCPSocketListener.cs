@@ -178,20 +178,20 @@ namespace UI_Server_GatewaySMS
 		{
 			string data = Encoding.ASCII.GetString(byteBuffer,0, size);
 			
-			MessageBox.Show(data);
+			/*TO SHOW DATA RECEIVED*/
+			/*MessageBox.Show(data);*/
 			
 			//Si encontre el "{"
 			if(data.IndexOf("{") != -1){
 				string aux = data.Remove(0,data.IndexOf("{"));
 				try{
 					var mensaje=JsonSerializer.DeserializeFromString<MensajeJson>(aux);
-					MessageBox.Show("Mensaje: "+mensaje.mensaje+"Numero: "+mensaje.numero);
 					return mensaje;
 				}
 				catch(Exception){return null;}
 				
 				
-			}
+			}	
 			else
 			{
 				return null;

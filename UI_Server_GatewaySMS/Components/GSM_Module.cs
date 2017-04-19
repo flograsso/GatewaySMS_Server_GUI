@@ -96,8 +96,48 @@ namespace UI_Server_GatewaySMS
 			return received;
 		}
 		
+		/*  Envio de comandos
+		 * 	Igual a sendCommand solo que usa write y no writeln sino se envia un enter luego del SMS
+		 * 		Return = null 	--> Comando falló
+		 *		Return !=null 	--> Comando OK
+		 * 
+		 */
+		String sendCommandMessage(String command, int delaySec, String response){
+			
+			string received = "";
+			receivedBuffer="";
+			
+			/*Puede tirar exepcion si el puerto esta cerrado (se desenchufa el modulo y
+			 * el puerto queda cerrado por mas quer reconecte*/
+			try
+			{
+				/*Envio Comando*/
+
+				serialPort.Write((command));
+			}
+			catch (Exception){}
+			
+			/*Espero hasta que pase el tiempo delaySec o encuentre el string response en la respuesta*/
+			var task = Task.Factory.StartNew (() => waitForResult(response));
+			if (task.Wait(TimeSpan.FromSeconds(delaySec))){
+				/*Encontro string*/
+				received=receivedBuffer;
+				
+			}
+			else /*No Encontro string*/
+			{
+				
+				received = null;
+			}
+			
+			receivedBuffer="";
+			
+			return received;
+		}
+		
 		
 		public bool enviarSMS(string numero, string mensaje){
+			
 			bool OK=true;
 			
 			
@@ -105,7 +145,7 @@ namespace UI_Server_GatewaySMS
 				OK=false;
 			}
 			
-			if ((sendCommand(mensaje,7,"ERROR")) != null){
+			if ((sendCommandMessage(mensaje,7,"ERROR")) != null){
 				OK=false;
 			}
 			

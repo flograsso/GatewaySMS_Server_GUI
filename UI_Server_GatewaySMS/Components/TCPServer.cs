@@ -309,14 +309,12 @@ namespace UI_Server_GatewaySMS
 				errorCount=0;
 				
 				TCPServer.queue.TryDequeue(out aux);
-				
-				MessageBox.Show(aux.numero + aux.mensaje);
 
 				while (!enviado && (errorCount<3)){
 					
 					//Le saco los fin de linea xq sino no anda
 					
-					if (gsm_module.enviarSMS(aux.numero.Replace("\r\n", string.Empty),aux.mensaje.Replace("\r\n", string.Empty)))
+					if (gsm_module.enviarSMS(aux.numero.Replace("\r\n", string.Empty),aux.mensaje.Replace("\n", string.Empty).Replace("\r",string.Empty)))
 					{
 						enviado = true;
 						logger.logData("Mensaje Enviado. Numero: "+aux.numero.Replace("\r\n", string.Empty)+ " Mensaje: "+aux.mensaje.Replace("\r\n", string.Empty));
