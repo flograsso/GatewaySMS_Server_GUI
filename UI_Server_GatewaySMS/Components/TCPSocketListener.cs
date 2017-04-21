@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net.Sockets;
+
 using System.Threading;
 using System.Text;
 using System.IO;
@@ -93,30 +94,22 @@ namespace UI_Server_GatewaySMS
 				{
 					size = m_clientSocket.Receive(byteBuffer);
 					m_currentReceiveDateTime=DateTime.Now;
+					
+					
+					
 					var mensaje =ParseReceiveBuffer(byteBuffer, size);
 					if(mensaje!=null){
 						Message message = new Message(mensaje.numero,mensaje.mensaje);
 						TCPServer.queue.Enqueue(message);
 					}
 					
+					m_clientSocket.Send(TCPServer.HTTPresponse,TCPServer.HTTPresponse.Length,SocketFlags.None);
 					
-					/*Si encontro ambos parametros. Encolo
-					if (httpHeaders.ContainsKey("numero") && httpHeaders.ContainsKey("mensaje") )
-					{
+					/*Cierro el Socket. Sino hago esto, el receptor del HTTP200 se queda esperando el ACK-RST que recien se ejecuta cuando
+					 se ejecuta la funcion CheckClientCommInterval*/
+					this.StopSocketListener();
 						
-
-						
-						/*RESPUESTA DE MENSAJE RECIBIDO
-						
-						try
-						{
-							byte[] toBytes = Encoding.ASCII.GetBytes("Message Received");
-							m_clientSocket.Send(toBytes);
-						}
-						catch(SocketException se){}
-						
-					}
-					 */
+					
 				}
 				catch (SocketException)
 				{
@@ -176,10 +169,10 @@ namespace UI_Server_GatewaySMS
 		/// <param name="size"></param>
 		public MensajeJson ParseReceiveBuffer(Byte [] byteBuffer, int size)
 		{
-			string data = Encoding.ASCII.GetString(byteBuffer,0, size);
+			string data = Encoding.UTF8.GetString(byteBuffer,0, size);
 			
 			/*TO SHOW DATA RECEIVED*/
-			/*MessageBox.Show(data);*/
+			//MessageBox.Show(data);
 			
 			//Si encontre el "{"
 			if(data.IndexOf("{") != -1){
@@ -191,7 +184,7 @@ namespace UI_Server_GatewaySMS
 				catch(Exception){return null;}
 				
 				
-			}	
+			}
 			else
 			{
 				return null;
@@ -291,6 +284,8 @@ namespace UI_Server_GatewaySMS
 				m_lastReceiveDateTime = m_currentReceiveDateTime;
 			}
 		}
+		
+
 	}
 
 }

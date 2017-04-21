@@ -9,6 +9,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Collections;
+using System.Text.RegularExpressions;
 using System.IO;
 using System.Windows.Forms;
 
@@ -28,14 +29,14 @@ namespace UI_Server_GatewaySMS
 		/// Default Constants.
 		/// </summary>
 		
-		public static IPAddress DEFAULT_SERVER = IPAddress.Parse("127.0.0.1");
-		//public static IPAddress DEFAULT_SERVER = IPAddress.Parse("163.10.123.161");
+		//public static IPAddress DEFAULT_SERVER = IPAddress.Parse("127.0.0.1");
+		public static IPAddress DEFAULT_SERVER = IPAddress.Parse("163.10.123.161");
 		public static int DEFAULT_PORT=31001;
 		public static IPEndPoint DEFAULT_IP_END_POINT = new IPEndPoint(DEFAULT_SERVER, DEFAULT_PORT);
 		public static BlockingQueue<Message> queue;
 		public static SerialPort serialPort = new SerialPort();
 		public static GSM_Module gsm_module = new GSM_Module(ref serialPort);
-		
+		public static byte[] HTTPresponse;
 		
 		private static readonly HttpClient client = new HttpClient();
 		
@@ -97,12 +98,7 @@ namespace UI_Server_GatewaySMS
 			try
 			{
 				m_server = new TcpListener(ipNport);
-				// Create a directory for storing client sent files.
-				if (!Directory.Exists(TCPSocketListener.DEFAULT_FILE_STORE_LOC))
-				{
-					Directory.CreateDirectory(
-						TCPSocketListener.DEFAULT_FILE_STORE_LOC);
-				}
+
 			}
 			catch(Exception)
 			{
@@ -120,6 +116,14 @@ namespace UI_Server_GatewaySMS
 			
 			if (m_server!=null)
 			{
+				
+				StringBuilder str = new StringBuilder();
+				str.Append("HTTP/1.1 200 OK\r\n");
+				//str.Append("Content-Type: text/html\r\n");
+				//str.Append("Connection: close\r\n");
+				str.Append("\r\n");
+				HTTPresponse = Encoding.ASCII.GetBytes(str.ToString());
+				
 				// Create a ArrayList for storing SocketListeners before
 				// starting the server.
 				m_socketListenersList = new ArrayList();
@@ -302,26 +306,31 @@ namespace UI_Server_GatewaySMS
 			Message aux;
 			bool enviado;
 			int errorCount = 0;
-			
+
 			while(!m_stopProccesing){
 				
 				enviado=false;
 				errorCount=0;
 				
 				TCPServer.queue.TryDequeue(out aux);
-
+				
+				/*Elimino /r /n. Reemplazo caracteres acentuados, ñ y corto a 160 caracteres*/
+				string mensaje = filtrarMensaje(aux.mensaje);
+				
+				
 				while (!enviado && (errorCount<3)){
+					
 					
 					//Le saco los fin de linea xq sino no anda
 					
-					if (gsm_module.enviarSMS(aux.numero.Replace("\r\n", string.Empty),aux.mensaje.Replace("\n", string.Empty).Replace("\r",string.Empty)))
+					if (gsm_module.enviarSMS(aux.numero.Replace("\r\n", string.Empty),mensaje))
 					{
 						enviado = true;
-						logger.logData("Mensaje Enviado. Numero: "+aux.numero.Replace("\r\n", string.Empty)+ " Mensaje: "+aux.mensaje.Replace("\r\n", string.Empty));
+						logger.logData("Mensaje Enviado. Numero: "+aux.numero.Replace("\r\n", string.Empty)+ " Mensaje: "+mensaje);
 					}
 					else
 					{
-						logger.logData("ERROR (Intento "+(errorCount+1)+"/3) : Mensaje NO Enviado. Numero: "+aux.numero.Replace("\r\n", string.Empty)+ "Mensaje: "+aux.mensaje.Replace("\r\n", string.Empty));
+						logger.logData("ERROR (Intento "+(errorCount+1)+"/3) : Mensaje NO Enviado. Numero: "+aux.numero.Replace("\r\n", string.Empty)+ "Mensaje: "+mensaje);
 						
 						gsm_module.connectSIM900();
 						gsm_module.setSignal();
@@ -400,6 +409,40 @@ namespace UI_Server_GatewaySMS
 			{}
 		}
 		
+		public string filtrarMensaje(string mensaje){
+			
+			
+			
+			/*Elimino /n y /r*/
+			mensaje= mensaje.Replace("\n", string.Empty).Replace("\r",string.Empty);
+			
+			/*
+			 * 	Reemplazo caracteres con tilde por su equivalente sin tilde
+			 *	Reemplazo ñ por n
+			 */
+			System.Text.RegularExpressions.Regex a = new Regex("[á|à|ä|â]", RegexOptions.Compiled);
+			Regex e = new Regex("[é|è|ë|ê]", RegexOptions.Compiled);
+			Regex i = new Regex("[í|ì|ï|î]", RegexOptions.Compiled);
+			Regex o = new Regex("[ó|ò|ö|ô]", RegexOptions.Compiled);
+			Regex u = new Regex("[ú|ù|ü|û]", RegexOptions.Compiled);
+			Regex n = new Regex("[ñ|Ñ]", RegexOptions.Compiled);
+			mensaje = a.Replace(mensaje, "a");
+			mensaje = e.Replace(mensaje, "e");
+			mensaje = i.Replace(mensaje, "i");
+			mensaje = o.Replace(mensaje, "o");
+			mensaje = u.Replace(mensaje, "u");
+			mensaje = n.Replace(mensaje, "n");
+			
+			/*
+			 *	Si tiene mas de 160 caracteres lo corto.
+			 */
+			if (mensaje.Length>159){
+				mensaje=mensaje.Remove(160,mensaje.Length-160);
+			}
+			
+			return mensaje;
+			
 
+		}
 	}
 }
