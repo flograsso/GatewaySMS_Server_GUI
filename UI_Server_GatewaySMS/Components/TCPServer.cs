@@ -29,8 +29,14 @@ namespace UI_Server_GatewaySMS
 		/// Default Constants.
 		/// </summary>
 		
+		/*LocalHost*/
 		//public static IPAddress DEFAULT_SERVER = IPAddress.Parse("127.0.0.1");
-		public static IPAddress DEFAULT_SERVER = IPAddress.Parse("163.10.123.161");
+		
+		/*Notebook Fede*/
+		//public static IPAddress DEFAULT_SERVER = IPAddress.Parse("163.10.123.161");
+		
+		/*Notebook Monitoreo*/
+		public static IPAddress DEFAULT_SERVER = IPAddress.Parse("163.10.123.181");
 		public static int DEFAULT_PORT=31001;
 		public static IPEndPoint DEFAULT_IP_END_POINT = new IPEndPoint(DEFAULT_SERVER, DEFAULT_PORT);
 		public static BlockingQueue<Message> queue;
@@ -100,9 +106,10 @@ namespace UI_Server_GatewaySMS
 				m_server = new TcpListener(ipNport);
 
 			}
-			catch(Exception)
+			catch(Exception e)
 			{
 				m_server=null;
+				logger.logData("EXEPCION: "+e);
 			}
 		}
 		public bool isServerRunning(){
@@ -117,10 +124,9 @@ namespace UI_Server_GatewaySMS
 			if (m_server!=null)
 			{
 				
+				/*Creo la rta HTTP que luego enviaran los Threads*/
 				StringBuilder str = new StringBuilder();
 				str.Append("HTTP/1.1 200 OK\r\n");
-				//str.Append("Content-Type: text/html\r\n");
-				//str.Append("Connection: close\r\n");
 				str.Append("\r\n");
 				HTTPresponse = Encoding.ASCII.GetBytes(str.ToString());
 				
@@ -250,9 +256,10 @@ namespace UI_Server_GatewaySMS
 					// thread.
 					socketListener.StartSocketListener();
 				}
-				catch (SocketException)
+				catch (SocketException e)
 				{
 					m_stopServer = true;
+					logger.logData("EXEPCION: "+e);
 				}
 			}
 		}
@@ -301,6 +308,9 @@ namespace UI_Server_GatewaySMS
 		}
 		
 		
+		/// <summary>
+		///Thread que procesa los mensajes encolados
+		/// </summary>
 		private void processingQueueThreadStart(){
 			
 			Message aux;
@@ -313,24 +323,44 @@ namespace UI_Server_GatewaySMS
 				errorCount=0;
 				
 				TCPServer.queue.TryDequeue(out aux);
-				
+
 				/*Elimino /r /n. Reemplazo caracteres acentuados, ñ y corto a 160 caracteres*/
 				string mensaje = filtrarMensaje(aux.mensaje);
 				
+				/*Elimina espacios y devuelve "" si contiene caracteres no numericos*/
+				string numero = filtrarNumero(aux.numero);
+				
+				/*Convierto a codificacion GSM7*/
+				string mensajeGSMFormat=GSMChar(mensaje);
+				
+				/*Numero vacio*/
+				if (numero == ""){
+					enviado=true;
+					logger.logData("ERROR - Numero Incorrecto. Numero: "+aux.numero+ " Mensaje: "+mensaje);
+					
+				}
 				
 				while (!enviado && (errorCount<3)){
 					
-					
-					//Le saco los fin de linea xq sino no anda
-					
-					if (gsm_module.enviarSMS(aux.numero.Replace("\r\n", string.Empty),mensaje))
+					if (gsm_module.enviarSMS(numero,mensajeGSMFormat))
 					{
 						enviado = true;
-						logger.logData("Mensaje Enviado. Numero: "+aux.numero.Replace("\r\n", string.Empty)+ " Mensaje: "+mensaje);
+						logger.logData("Mensaje Enviado. Numero: "+numero+ " Mensaje: "+mensaje);
 					}
 					else
 					{
-						logger.logData("ERROR (Intento "+(errorCount+1)+"/3) : Mensaje NO Enviado. Numero: "+aux.numero.Replace("\r\n", string.Empty)+ "Mensaje: "+mensaje);
+						logger.logData("ERROR (Intento "+(errorCount+1)+"/3) : Mensaje NO Enviado. Numero: "+numero+ " Mensaje: "+mensaje);
+						
+						try{
+							if(!TCPServer.serialPort.IsOpen){
+								TCPServer.serialPort.PortName=TCPServer.serialPort.PortName;
+								TCPServer.serialPort.Open();
+							}
+						}
+						catch(Exception e)
+						{
+							logger.logData("EXEPCION: "+e);
+						}
 						
 						gsm_module.connectSIM900();
 						gsm_module.setSignal();
@@ -342,16 +372,19 @@ namespace UI_Server_GatewaySMS
 				}
 				
 				if (!enviado){
+					/*Aviso por mail que no pudo enviar*/
 					sendErrorEmail();
 				}
 			}
 			
 		}
 		
+		/*
+		 * NO USADA
 		
 		public static void sendHTTPResponse(){
 			
-			/*VERSION 1*/
+			VERSION 1
 			
 			HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://127.0.0.1:31001");
 			request.Method = "POST";
@@ -369,8 +402,8 @@ namespace UI_Server_GatewaySMS
 			reqStream.Write(byte1, 0, byte1.Length);
 			reqStream.Close();
 			
-			/*VERSION 2. MAS FACIL Y FUNCIONA*/
-			/*
+			VERSION 2. MAS FACIL Y FUNCIONA
+			
 			try
 			{
 				var post = new NameValueCollection();
@@ -385,12 +418,14 @@ namespace UI_Server_GatewaySMS
 			}
 			catch (WebException we)
 			{}
-			 */
-			
-
 		}
 		
-		/*Envio un request a la API de pushingbox quien me envia un mail*/
+		 */
+		
+		
+		/// <summary>
+		///Envio un request a la API de pushingbox quien me envia un mail
+		/// </summary>
 		public void sendErrorEmail()
 		{
 			try
@@ -405,10 +440,16 @@ namespace UI_Server_GatewaySMS
 				
 				post = null;
 			}
-			catch (WebException)
-			{}
+			catch (WebException e)
+			{
+				logger.logData("EXEPCION: "+e);
+			}
 		}
 		
+		
+		/// <summary>
+		///Elimina los caracteres acentuados y corta el string a max 160 caracteres
+		/// </summary>
 		public string filtrarMensaje(string mensaje){
 			
 			
@@ -433,16 +474,142 @@ namespace UI_Server_GatewaySMS
 			mensaje = u.Replace(mensaje, "u");
 			mensaje = n.Replace(mensaje, "n");
 			
+			
 			/*
 			 *	Si tiene mas de 160 caracteres lo corto.
 			 */
 			if (mensaje.Length>159){
 				mensaje=mensaje.Remove(160,mensaje.Length-160);
 			}
+			mensaje=mensaje.Replace("\n", string.Empty).Replace("\r",string.Empty);
+			
+			
 			
 			return mensaje;
 			
 
 		}
+		
+		
+		/// <summary>
+		/// Borra espacios en blanco y testea si el string es un numero
+		/// </summary>
+		public string filtrarNumero(string numero){
+			
+			string newNumber;
+			
+			/*Borro espacios*/
+			newNumber=numero.Replace(" ",string.Empty);
+			
+			/*Testeo si es numero*/
+			double i = 0;
+			bool result = double.TryParse(newNumber, out i);
+			result=StrIsInteger(newNumber);
+			if(result){
+				return newNumber;
+			}
+			else
+			{
+				return "";
+			}
+		}
+		
+		
+		
+		private bool StrIsInteger(string str)
+		{
+			Regex regex = new Regex(@"^[0-9]+$");
+			
+			try
+			{
+				if (String.IsNullOrWhiteSpace(str))
+				{
+					return false;
+				}
+				if(!regex.IsMatch(str))
+				{
+					return false;
+				}
+				
+				return true;
+				
+			}
+			catch(Exception e)
+			{
+				logger.logData("EXEPCION: "+e);
+			}
+			
+			return false;
+			
+		}
+		
+
+		/// <summary>
+		/// Codifica el string a otro string con codificacion GSM 03.38 (GSM 7 bit)
+		/// http://www.developershome.com/sms/gsmAlphabet.asp
+		/// </summary>
+		/// <param name="PlainText: texto a convertir"></param>
+		
+		public static string GSMChar(string PlainText)
+		{
+			// ` is not a conversion, just a untranslatable letter
+			string strGSMTable ="";
+			strGSMTable += "@£$¥èéùìòÇ`Øø`Åå";
+			strGSMTable += "Δ_ΦΓΛΩΠΨΣΘΞ`ÆæßÉ";
+			strGSMTable += " !\"#¤%&'()*=,-./";
+			strGSMTable += "0123456789:;<=>?";
+			strGSMTable += "¡ABCDEFGHIJKLMNO";
+			strGSMTable += "PQRSTUVWXYZÄÖÑÜ`";
+			strGSMTable += "¿abcdefghijklmno";
+			strGSMTable += "pqrstuvwxyzäöñüà";
+
+			string strExtendedTable = "";
+			strExtendedTable += "````````````````";
+			strExtendedTable += "````^```````````";
+			strExtendedTable += "````````{}`````\\";
+			strExtendedTable += "````````````[~]`";
+			strExtendedTable += "|```````````````";
+			strExtendedTable += "````````````````";
+			strExtendedTable += "`````€``````````";
+			strExtendedTable += "````````````````";
+
+			string strGSMOutput = "";
+			int i = 0;
+			
+			/*Guardo el decimal correspondiente al caracter en UTF7 segun la tabla:
+			 http://www.developershome.com/sms/gsmAlphabet.asp
+			 Los caracteres normales coinciden pero el $ o _ por ejemplo, no coinciden
+			 */
+			ArrayList byteArray = new ArrayList();
+			
+			foreach(char cPlainText in PlainText.ToCharArray())
+			{
+				int intGSMTable = strGSMTable.IndexOf(cPlainText);
+				if (intGSMTable != -1)
+				{
+					strGSMOutput += intGSMTable.ToString("X2");
+					byteArray.Add(Convert.ToByte(intGSMTable.ToString("X2"), 16));
+					i++;
+					continue;
+				}
+				int intExtendedTable = strExtendedTable.IndexOf(cPlainText);
+				if (intExtendedTable !=-1)
+				{
+					strGSMOutput += (27).ToString("X2");
+					strGSMOutput += intExtendedTable.ToString("X2");
+					byteArray.Add(Convert.ToByte((27).ToString("X2"), 16));
+					byteArray.Add(Convert.ToByte(intExtendedTable.ToString("X2"), 16));
+					i++;
+				}
+			}
+			
+			/*Convierto el ArrayList en un byte{[]*/
+			byte[] byteArray1= (byte[])byteArray.ToArray(typeof(byte));
+			
+			/*Codifico en UTF7. Si lo imprimo como ASCII o UTF8 no voy a ver bien los caracteres pero en los SMS, si*/
+			return Encoding.UTF7.GetString(byteArray1,0, byteArray1.Length);
+		}
+		
+
 	}
 }

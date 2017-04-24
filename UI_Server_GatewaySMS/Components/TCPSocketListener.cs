@@ -80,7 +80,7 @@ namespace UI_Server_GatewaySMS
 		private void SocketListenerThreadStart()
 		{
 			int size=0;
-			Byte [] byteBuffer = new Byte[1024];
+			Byte [] byteBuffer = new Byte[3000];
 
 			m_lastReceiveDateTime = DateTime.Now;
 			m_currentReceiveDateTime = DateTime.Now;
@@ -97,24 +97,29 @@ namespace UI_Server_GatewaySMS
 					
 					
 					
+					/*Cierro el Socket. Sino hago esto, el receptor del HTTP200 se queda esperando el ACK-RST
+ 					que recien se ejecuta cuando se ejecuta la funcion CheckClientCommInterval*/
+					//m_clientSocket.Close();
+					
+					
+					/*Convierto el paquete recibido a un objeto mensaje*/
 					var mensaje =ParseReceiveBuffer(byteBuffer, size);
 					if(mensaje!=null){
 						Message message = new Message(mensaje.numero,mensaje.mensaje);
 						TCPServer.queue.Enqueue(message);
 					}
 					
+					/*Envio HTTP OK*/
 					m_clientSocket.Send(TCPServer.HTTPresponse,TCPServer.HTTPresponse.Length,SocketFlags.None);
-					
-					/*Cierro el Socket. Sino hago esto, el receptor del HTTP200 se queda esperando el ACK-RST que recien se ejecuta cuando
-					 se ejecuta la funcion CheckClientCommInterval*/
 					this.StopSocketListener();
-						
+
 					
 				}
-				catch (SocketException)
+				catch (SocketException e)
 				{
 					m_stopClient=true;
 					m_markedForDeletion=true;
+					TCPServer.logger.logData("EXEPCION: "+e);
 				}
 			}
 			t.Change(Timeout.Infinite, Timeout.Infinite);
@@ -129,6 +134,8 @@ namespace UI_Server_GatewaySMS
 			if (m_clientSocket!= null)
 			{
 				m_stopClient=true;
+				
+			
 				m_clientSocket.Close();
 
 				// Wait for one second for the the thread to stop.
@@ -156,24 +163,20 @@ namespace UI_Server_GatewaySMS
 		}
 
 		/// <summary>
-		/// This method parses data that is sent by a client using TCP/IP.
-		/// As per the "Protocol" between client and this Listener, client
-		/// sends each line of information by appending "CRLF" (Carriage Return
-		/// and Line Feed). But since the data is transmitted from client to
-		/// here by TCP/IP protocol, it is not guarenteed that each line that
-		/// arrives ends with a "CRLF". So the job of this method is to make a
-		/// complete line of information that ends with "CRLF" from the data
-		/// that comes from the client and get it processed.
+		/// Este metodo recibe el paquete HTTP y des serializa el JSON enviado en data
+		/// en un nuevo objeto mensaje
 		/// </summary>
-		/// <param name="byteBuffer"></param>
-		/// <param name="size"></param>
+		/// <param name="byteBuffer: Buffer de Bytes recibido por el socket"></param>
+		/// <param name="size: tamaño del buffer"></param>
 		public MensajeJson ParseReceiveBuffer(Byte [] byteBuffer, int size)
 		{
-			string data = Encoding.UTF8.GetString(byteBuffer,0, size);
+			
+			string data = Encoding.ASCII.GetString(byteBuffer,0, size);
 			
 			/*TO SHOW DATA RECEIVED*/
 			//MessageBox.Show(data);
 			
+			/*Voy hasta el inicio del JSON*/
 			//Si encontre el "{"
 			if(data.IndexOf("{") != -1){
 				string aux = data.Remove(0,data.IndexOf("{"));
@@ -181,7 +184,11 @@ namespace UI_Server_GatewaySMS
 					var mensaje=JsonSerializer.DeserializeFromString<MensajeJson>(aux);
 					return mensaje;
 				}
-				catch(Exception){return null;}
+				catch(Exception e)
+				{
+					TCPServer.logger.logData("EXEPCION: "+e);
+					return null;
+				}
 				
 				
 			}

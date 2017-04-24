@@ -36,6 +36,7 @@ namespace UI_Server_GatewaySMS
 			string fileName = Settings1.Default.logFileName;
 			
 			
+			
 			if (!File.Exists(path + @fileName + ".txt"))
 			{
 				fs=File.Create(path + @fileName + ".txt");
@@ -66,7 +67,7 @@ namespace UI_Server_GatewaySMS
 			try
 			{
 				string logLine = System.String.Format(
-					"{0:G}: {1}.", System.DateTime.Now, data);
+					"{0:G}: {1}", System.DateTime.Now, data);
 				sw.WriteLine(logLine);
 			}
 			finally

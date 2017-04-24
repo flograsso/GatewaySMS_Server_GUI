@@ -7,5 +7,8 @@
     <Setting Name="logFileName" Type="System.String" Scope="User" Roaming="false">
       <Value Profile="(Default)">log-1</Value>
     </Setting>
+    <Setting Name="puertoCOM" Type="System.String" Scope="User" Roaming="false">
+      <Value Profile="(Default)">COM11</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

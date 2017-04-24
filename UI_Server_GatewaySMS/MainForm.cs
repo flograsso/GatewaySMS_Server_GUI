@@ -5,6 +5,19 @@
  * Time: 10:48
  * 
  * To change this template use Tools | Options | Coding | Edit Standard Headers.
+ * 
+ * # UI_Server_GatewaySMS
+	Servidor HTTP en C# el cual escucha constantemente un puerto dado y al recibir un POST, 
+	crea un nuevo Thread que lo maneje. Este Thread recibe los parametros de un mensaje y lo encola. 
+	Otro Thread se encarga de desencolar los mensajes y enviarlos por un modulo GSM mediante el 
+	puerto serial
+
+	Los parametros a configurar para su funcionamiento son:
+
+	En el archivo TCPServer, hay que setear la IP local de la PC en la variable "DEFAULT_SERVER" y 
+	el puerto en "DEFAULT_PORT"
+	El BaudRate para comunicarse con el GSM esta configurado en 115200, se puede editar en la 
+	clase GSM_Module, en la linea "this.serialPort.BaudRate=115200;"
  */
 using System;
 using System.Collections.Generic;
@@ -13,6 +26,9 @@ using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Windows.Forms;
 using System.IO.Ports;
+using System.Windows.Forms.PropertyGridInternal;
+using Client_test;
+
 
 namespace UI_Server_GatewaySMS
 {
@@ -30,6 +46,7 @@ namespace UI_Server_GatewaySMS
 			//
 			// The InitializeComponent() call is required for Windows Forms designer support.
 			//
+			
 			InitializeComponent();
 			
 			//
@@ -39,6 +56,8 @@ namespace UI_Server_GatewaySMS
 		void MainFormLoad(object sender, EventArgs e)
 		{
 			button1.Enabled=false;
+			textBox_serialport.Text=Settings1.Default.puertoCOM;
+			/*Llamo al Click de boton Conectar*/
 			Button1Click(sender,e);
 			
 			
@@ -53,10 +72,13 @@ namespace UI_Server_GatewaySMS
 			try{
 				while (i < 3 && !ok)
 				{
+					
 					TCPServer.serialPort.PortName=textBox_serialport.Text;
+					Settings1.Default.puertoCOM=textBox_serialport.Text;
+					Settings1.Default.Save();
+					
 					if(!TCPServer.serialPort.IsOpen){
-						TCPServer.serialPort.Close();
-						TCPServer.serialPort.PortName=textBox_serialport.Text;
+						TCPServer.serialPort.PortName=TCPServer.serialPort.PortName;
 						TCPServer.serialPort.Open();
 						TCPServer.logger.logData("CONECTADO AL PUERTO "+textBox_serialport.Text);
 						
@@ -112,10 +134,14 @@ namespace UI_Server_GatewaySMS
 				}
 				
 			}
-			catch (Exception){}
+			catch (Exception ex)
+			{
+				TCPServer.logger.logData("EXEPCION: "+ex);
+			}
 			
 			
 		}
+		/*Boton salir*/
 		void Button2Click(object sender, EventArgs e)
 		{
 			this.Close();
