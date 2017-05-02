@@ -171,7 +171,7 @@ namespace UI_Server_GatewaySMS
 		public MensajeJson ParseReceiveBuffer(Byte [] byteBuffer, int size)
 		{
 			
-			string data = Encoding.ASCII.GetString(byteBuffer,0, size);
+			string data = Encoding.UTF8.GetString(byteBuffer,0, size);
 			
 			/*TO SHOW DATA RECEIVED*/
 			//MessageBox.Show(data);

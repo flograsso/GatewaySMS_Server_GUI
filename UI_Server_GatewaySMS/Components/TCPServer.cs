@@ -331,6 +331,8 @@ namespace UI_Server_GatewaySMS
 				string numero = filtrarNumero(aux.numero);
 				
 				/*Convierto a codificacion GSM7*/
+				/*Cuando hago los LOG le paso aux.mensaje que tiene codificacion UTF8
+				 Sino cuando lo imprime lo hace en UTF7 y los lectores no lo codifican bien*/
 				string mensajeGSMFormat=GSMChar(mensaje);
 				
 				/*Numero vacio*/
