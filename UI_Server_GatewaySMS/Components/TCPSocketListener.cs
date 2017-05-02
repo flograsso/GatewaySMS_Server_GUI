@@ -135,7 +135,7 @@ namespace UI_Server_GatewaySMS
 			{
 				m_stopClient=true;
 				
-			
+				
 				m_clientSocket.Close();
 
 				// Wait for one second for the the thread to stop.
@@ -182,7 +182,16 @@ namespace UI_Server_GatewaySMS
 				string aux = data.Remove(0,data.IndexOf("{"));
 				try{
 					var mensaje=JsonSerializer.DeserializeFromString<MensajeJson>(aux);
-					return mensaje;
+					if(mensaje.numero!="" && mensaje.mensaje!=""){
+
+						return mensaje;
+					}
+					else
+					{
+						TCPServer.logger.logData("Mensaje o Numero Vacio : Numero:"+mensaje.numero+" Mensaje:"+mensaje.mensaje);
+						return null;
+
+					}
 				}
 				catch(Exception e)
 				{
