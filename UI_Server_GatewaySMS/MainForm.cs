@@ -102,9 +102,16 @@ namespace UI_Server_GatewaySMS
 			
 
 			if (ok){
+				try{
 				// Create the Server Object ans Start it.
 				server = new TCPServer();
 				server.StartServer();
+				}
+				catch(Exception e2){
+					TCPServer.logger.logData("ERROR : Error de creacion del Server");
+					TCPServer.logger.logData(e2.ToString());
+					MessageBox.Show("Error de creacion del server");
+				}
 				button1.Enabled=false;
 				textBox_serialport.Enabled=false;
 				label3.Text="RUNNING...";

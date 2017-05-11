@@ -36,9 +36,9 @@ namespace UI_Server_GatewaySMS
 		//public static IPAddress DEFAULT_SERVER = IPAddress.Parse("163.10.123.161");
 		
 		/*Notebook Monitoreo*/
-		public static IPAddress DEFAULT_SERVER = IPAddress.Parse("163.10.123.181");
+		/*public static IPAddress DEFAULT_SERVER = IPAddress.Parse("163.10.123.181");*/
+		
 		public static int DEFAULT_PORT=31001;
-		public static IPEndPoint DEFAULT_IP_END_POINT = new IPEndPoint(DEFAULT_SERVER, DEFAULT_PORT);
 		public static BlockingQueue<Message> queue;
 		public static SerialPort serialPort = new SerialPort();
 		public static GSM_Module gsm_module = new GSM_Module(ref serialPort);
@@ -64,10 +64,23 @@ namespace UI_Server_GatewaySMS
 		/// </summary>
 		public TCPServer()
 		{
-			Init(DEFAULT_IP_END_POINT);
+			try 
+			{
+				IPAddress serverIP = IPAddress.Parse(GetLocalIPAddress());
+				Init(new IPEndPoint(serverIP, DEFAULT_PORT));
+			}
+			catch(Exception){
+				logger.logData("ERROR : Error al adquirir direccion IP");
+				MessageBox.Show("Error al adquirir IP");
+					
+			}
+			
 		}
+		
+		/*
 		public TCPServer(IPAddress serverIP)
-		{
+		{	
+
 			Init(new IPEndPoint(serverIP, DEFAULT_PORT));
 		}
 
@@ -85,7 +98,7 @@ namespace UI_Server_GatewaySMS
 		{
 			Init(ipNport);
 		}
-
+		*/
 		/// <summary>
 		/// Destructor.
 		/// </summary>
@@ -610,6 +623,19 @@ namespace UI_Server_GatewaySMS
 			
 			/*Codifico en UTF7. Si lo imprimo como ASCII o UTF8 no voy a ver bien los caracteres pero en los SMS, si*/
 			return Encoding.UTF7.GetString(byteArray1,0, byteArray1.Length);
+		}
+		
+		public static string GetLocalIPAddress()
+		{
+			var host = Dns.GetHostEntry(Dns.GetHostName());
+			foreach (var ip in host.AddressList)
+			{
+				if (ip.AddressFamily == AddressFamily.InterNetwork)
+				{
+					return ip.ToString();
+				}
+			}
+			throw new Exception("Local IP Address Not Found!");
 		}
 		
 
