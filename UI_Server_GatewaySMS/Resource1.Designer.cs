@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Client_test {
+namespace UI_Server_GatewaySMS {
 	using System;
 	
 	
@@ -39,7 +39,7 @@ namespace Client_test {
 		internal static global::System.Resources.ResourceManager ResourceManager {
 			get {
 				if (object.ReferenceEquals(resourceMan, null)) {
-					global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Client_test.Resource1", typeof(Resource1).Assembly);
+					global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("UI_Server_GatewaySMS.Resource1", typeof(Resource1).Assembly);
 					resourceMan = temp;
 				}
 				return resourceMan;

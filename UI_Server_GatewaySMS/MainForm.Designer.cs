@@ -102,8 +102,8 @@ namespace UI_Server_GatewaySMS
 			// 
 			// pictureBox1
 			// 
-			this.pictureBox1.Image = global::Client_test.Resource1.logo_cespi;
-			this.pictureBox1.InitialImage = global::Client_test.Resource1.logo_cespi;
+			this.pictureBox1.Image = global::UI_Server_GatewaySMS.Resource1.logo_cespi;
+			this.pictureBox1.InitialImage = global::UI_Server_GatewaySMS.Resource1.logo_cespi;
 			this.pictureBox1.Location = new System.Drawing.Point(12, 163);
 			this.pictureBox1.Name = "pictureBox1";
 			this.pictureBox1.Size = new System.Drawing.Size(161, 55);
@@ -122,7 +122,7 @@ namespace UI_Server_GatewaySMS
 			this.Controls.Add(this.button1);
 			this.Controls.Add(this.label1);
 			this.Font = new System.Drawing.Font("Calibri", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.Icon = global::Client_test.Resource1.favicon;
+			this.Icon = global::UI_Server_GatewaySMS.Resource1.favicon;
 			this.Name = "MainForm";
 			this.Text = "Gateway SMS Server";
 			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainFormFormClosed);

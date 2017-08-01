@@ -10,7 +10,7 @@ using System;
 using System.IO;
 using System.Windows.Forms;
 using System.Windows.Forms.PropertyGridInternal;
-using Client_test;
+
 
 namespace UI_Server_GatewaySMS
 {
