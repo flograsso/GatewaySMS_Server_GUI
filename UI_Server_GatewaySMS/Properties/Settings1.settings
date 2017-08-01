@@ -4,6 +4,9 @@
     <Profile Name="(Default)" />
   </Profiles>
   <Settings>
+    <Setting Name="deviceID" Type="System.String" Scope="User" Roaming="false">
+      <Value Profile="(Default)">PID_0042</Value>
+    </Setting>
     <Setting Name="logFileName" Type="System.String" Scope="User" Roaming="false">
       <Value Profile="(Default)">log-1</Value>
     </Setting>

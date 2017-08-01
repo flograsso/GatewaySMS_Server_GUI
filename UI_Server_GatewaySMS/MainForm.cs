@@ -7,16 +7,16 @@
  * To change this template use Tools | Options | Coding | Edit Standard Headers.
  * 
  * # UI_Server_GatewaySMS
-	Servidor HTTP en C# el cual escucha constantemente un puerto dado y al recibir un POST, 
-	crea un nuevo Thread que lo maneje. Este Thread recibe los parametros de un mensaje y lo encola. 
-	Otro Thread se encarga de desencolar los mensajes y enviarlos por un modulo GSM mediante el 
+	Servidor HTTP en C# el cual escucha constantemente un puerto dado y al recibir un POST,
+	crea un nuevo Thread que lo maneje. Este Thread recibe los parametros de un mensaje y lo encola.
+	Otro Thread se encarga de desencolar los mensajes y enviarlos por un modulo GSM mediante el
 	puerto serial
 
 	Los parametros a configurar para su funcionamiento son:
 
-	En el archivo TCPServer, hay que setear la IP local de la PC en la variable "DEFAULT_SERVER" y 
+	En el archivo TCPServer, hay que setear la IP local de la PC en la variable "DEFAULT_SERVER" y
 	el puerto en "DEFAULT_PORT"
-	El BaudRate para comunicarse con el GSM esta configurado en 115200, se puede editar en la 
+	El BaudRate para comunicarse con el GSM esta configurado en 115200, se puede editar en la
 	clase GSM_Module, en la linea "this.serialPort.BaudRate=115200;"
  */
 using System;
@@ -27,7 +27,7 @@ using System.Security.Cryptography;
 using System.Windows.Forms;
 using System.IO.Ports;
 using System.Windows.Forms.PropertyGridInternal;
-using Client_test;
+
 
 
 namespace UI_Server_GatewaySMS
@@ -77,6 +77,8 @@ namespace UI_Server_GatewaySMS
 					Settings1.Default.puertoCOM=textBox_serialport.Text;
 					Settings1.Default.Save();
 					
+					restartUSBController();
+					
 					if(!TCPServer.serialPort.IsOpen){
 						TCPServer.serialPort.PortName=TCPServer.serialPort.PortName;
 						TCPServer.serialPort.Open();
@@ -97,15 +99,16 @@ namespace UI_Server_GatewaySMS
 			}
 			catch(Exception){
 				TCPServer.logger.logData("ERROR : Puerto COM Incorrecto");
+				TCPServer.logger.logData("EXEPCION: "+e);
 				MessageBox.Show("Puerto COM incorrecto","ERROR",MessageBoxButtons.OK,MessageBoxIcon.Exclamation);
 			}
 			
 
 			if (ok){
 				try{
-				// Create the Server Object ans Start it.
-				server = new TCPServer();
-				server.StartServer();
+					// Create the Server Object ans Start it.
+					server = new TCPServer();
+					server.StartServer();
 				}
 				catch(Exception e2){
 					TCPServer.logger.logData("ERROR : Error de creacion del Server");
@@ -133,7 +136,6 @@ namespace UI_Server_GatewaySMS
 			if (server != null && server.isServerRunning()){
 				server.StopServer();
 			}
-			
 			/*Cierro el serial*/
 			try{
 				if(TCPServer.serialPort.IsOpen){
@@ -155,6 +157,43 @@ namespace UI_Server_GatewaySMS
 		}
 
 		
+		/*Ejecuta mediante cmd el programa devcon (administrador de dispositivos por consola)
+		 *y reinicia el dispositivo. Esto lo hace llamando al programa y pasandole unos paramentros
+		 * comando C:\.....\devcon.exe restart *Instance_ID*  donde Instance_ID es el identificador del dispositivo.
+		 * Este identificador lo puedo ver desde el administrador de dispositivos. En los detalles del dispositivo
+		 * viendo la "Ruta de Acceso de la Instancia del Dispositivo"
+		 * El software devcon.exe es de Windows y debe estar en la misma carpeta del .exe del programa.
+		 * El device ID es leido del archivo Settings1
+		 */
+		void restartUSBController()
+		{
+			//Create process
+			System.Diagnostics.Process pProcess = new System.Diagnostics.Process();
+
+			//strCommand is path and file name of command to run
+			pProcess.StartInfo.FileName = @AppDomain.CurrentDomain.BaseDirectory.ToString()+"\\devcon.exe";
+
+			//Execute comand "restart *deviceID*"
+			pProcess.StartInfo.Arguments = " restart *"+Settings1.Default.deviceID+"*"; 
+
+			pProcess.StartInfo.UseShellExecute = false;
+
+			//Set output of program to be written to process output stream
+			pProcess.StartInfo.RedirectStandardOutput = true;
+
+			//Start the process
+			pProcess.Start();
+
+			//Get program output
+			//string strOutput = pProcess.StandardOutput.ReadToEnd();
+
+			//Wait for process to finish
+			pProcess.WaitForExit();
+			
+			
+			
+
+		}
 
 		
 	}

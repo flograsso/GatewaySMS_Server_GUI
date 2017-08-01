@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Client_test {
+namespace UI_Server_GatewaySMS {
 	
 	
 	[global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
@@ -20,6 +20,18 @@ namespace Client_test {
 		public static Settings1 Default {
 			get {
 				return defaultInstance;
+			}
+		}
+		
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("PID_0042")]
+		public string deviceID {
+			get {
+				return ((string)(this["deviceID"]));
+			}
+			set {
+				this["deviceID"] = value;
 			}
 		}
 		
