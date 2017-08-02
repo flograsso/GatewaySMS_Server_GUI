@@ -5,13 +5,13 @@
   </Profiles>
   <Settings>
     <Setting Name="deviceID" Type="System.String" Scope="User" Roaming="false">
-      <Value Profile="(Default)">PID_0042</Value>
+      <Value Profile="(Default)">PID_0257</Value>
     </Setting>
     <Setting Name="logFileName" Type="System.String" Scope="User" Roaming="false">
       <Value Profile="(Default)">log-1</Value>
     </Setting>
     <Setting Name="puertoCOM" Type="System.String" Scope="User" Roaming="false">
-      <Value Profile="(Default)">COM11</Value>
+      <Value Profile="(Default)">COM3</Value>
     </Setting>
   </Settings>
 </SettingsFile>

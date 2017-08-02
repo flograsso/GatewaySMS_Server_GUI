@@ -25,7 +25,7 @@ namespace UI_Server_GatewaySMS {
 		
 		[global::System.Configuration.UserScopedSettingAttribute()]
 		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-		[global::System.Configuration.DefaultSettingValueAttribute("PID_0042")]
+		[global::System.Configuration.DefaultSettingValueAttribute("PID_0257")]
 		public string deviceID {
 			get {
 				return ((string)(this["deviceID"]));
@@ -49,7 +49,7 @@ namespace UI_Server_GatewaySMS {
 		
 		[global::System.Configuration.UserScopedSettingAttribute()]
 		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-		[global::System.Configuration.DefaultSettingValueAttribute("COM11")]
+		[global::System.Configuration.DefaultSettingValueAttribute("COM3")]
 		public string puertoCOM {
 			get {
 				return ((string)(this["puertoCOM"]));
