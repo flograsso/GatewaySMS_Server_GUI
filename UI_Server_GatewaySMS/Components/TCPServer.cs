@@ -11,6 +11,7 @@ using System.Threading;
 using System.Collections;
 using System.Text.RegularExpressions;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace UI_Server_GatewaySMS
@@ -64,7 +65,7 @@ namespace UI_Server_GatewaySMS
 		/// </summary>
 		public TCPServer()
 		{
-			try 
+			try
 			{
 				IPAddress serverIP = IPAddress.Parse(GetLocalIPAddress());
 				Init(new IPEndPoint(serverIP, DEFAULT_PORT));
@@ -72,14 +73,14 @@ namespace UI_Server_GatewaySMS
 			catch(Exception){
 				logger.logData("ERROR : Error al adquirir direccion IP");
 				MessageBox.Show("Error al adquirir IP");
-					
+				
 			}
 			
 		}
 		
 		/*
 		public TCPServer(IPAddress serverIP)
-		{	
+		{
 
 			Init(new IPEndPoint(serverIP, DEFAULT_PORT));
 		}
@@ -98,7 +99,7 @@ namespace UI_Server_GatewaySMS
 		{
 			Init(ipNport);
 		}
-		*/
+		 */
 		/// <summary>
 		/// Destructor.
 		/// </summary>
@@ -388,7 +389,7 @@ namespace UI_Server_GatewaySMS
 				
 				if (!enviado){
 					/*Aviso por mail que no pudo enviar*/
-					sendErrorEmail();
+					sendErrorEmail(1);
 				}
 			}
 			
@@ -439,26 +440,43 @@ namespace UI_Server_GatewaySMS
 		
 		
 		/// <summary>
-		///Envio un request a la API de pushingbox quien me envia un mail
+		///Envio un request a la API de pushingbox quien me envia un mail.
+		/// 
 		/// </summary>
-		public void sendErrorEmail()
+		public static void sendErrorEmail(int errorCode)
 		{
-			try
-			{
-				var post = new NameValueCollection();
-				post.Add("devid", "v1C08EE53692D300");
-
-				using (var wc = new WebClient())
-				{
-					wc.UploadValues("http://api.pushingbox.com/pushingbox", post);
-				}
-				
-				post = null;
-			}
-			catch (WebException e)
-			{
-				logger.logData("EXEPCION: "+e);
-			}
+			
+			Task.Factory.StartNew(() =>
+			                      {
+			                      	var post = new NameValueCollection();
+			                      	switch (errorCode)
+			                      	{
+			                      		case 1: //Send Error
+			                      			post.Add("devid", "v1C08EE53692D300");
+			                      			break;
+			                      		case 2: //Connection Error
+			                      			post.Add("devid", "vC8D54911B83D9B3");
+			                      			break;
+			                      		case 3:	//Connection OK
+			                      			post.Add("devid", "vEDAAF515FE7B6E2");
+			                      			break;
+			                      	}
+			                      	
+			                      	try
+			                      	{
+			                      		
+			                      		using (var wc = new WebClient())
+			                      		{
+			                      			wc.UploadValues("http://api.pushingbox.com/pushingbox", post);
+			                      		}
+			                      		
+			                      		post = null;
+			                      	}
+			                      	catch (WebException e)
+			                      	{
+			                      		logger.logData("EXEPCION: "+e);
+			                      	}
+			                      });
 		}
 		
 		

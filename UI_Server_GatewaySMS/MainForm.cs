@@ -88,6 +88,10 @@ namespace UI_Server_GatewaySMS
 						{
 							ok=true;
 						}
+						else
+						{
+							TCPServer.logger.logData("ERROR : No se pudo conectar al módulo SIM");
+						}
 						i++;
 					}
 					
@@ -118,6 +122,7 @@ namespace UI_Server_GatewaySMS
 				button1.Enabled=false;
 				textBox_serialport.Enabled=false;
 				label3.Text="RUNNING...";
+				TCPServer.sendErrorEmail(3);
 				TCPServer.logger.logData("CONECTADO AL MODULO GSM");
 			}
 			else
@@ -125,6 +130,7 @@ namespace UI_Server_GatewaySMS
 				label3.Text="DESCONECTADO";
 				button1.Enabled=true;
 				textBox_serialport.Enabled=true;
+				TCPServer.sendErrorEmail(2);
 				TCPServer.logger.logData("ERROR : No se pudo conectar con el modulo GSM");
 			}
 			
