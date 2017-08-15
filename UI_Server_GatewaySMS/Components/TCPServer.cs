@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.IO.Ports;
 using System.Net;
 using System.Net.Http;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -70,8 +71,9 @@ namespace UI_Server_GatewaySMS
 				IPAddress serverIP = IPAddress.Parse(GetLocalIPAddress());
 				Init(new IPEndPoint(serverIP, DEFAULT_PORT));
 			}
-			catch(Exception){
+			catch(Exception ex){
 				logger.logData("ERROR : Error al adquirir direccion IP");
+				logger.logData(ex.ToString());
 				MessageBox.Show("Error al adquirir IP");
 				
 			}
@@ -645,15 +647,50 @@ namespace UI_Server_GatewaySMS
 		
 		public static string GetLocalIPAddress()
 		{
-			var host = Dns.GetHostEntry(Dns.GetHostName());
-			foreach (var ip in host.AddressList)
+			String dirIP="";
+			
+			try
 			{
-				if (ip.AddressFamily == AddressFamily.InterNetwork)
+				//Listo interfaces. Hay PCs con mas de 1 interfaz de red
+				NetworkInterface[] adapters = NetworkInterface.GetAllNetworkInterfaces();
+				foreach (NetworkInterface adapter in adapters)
 				{
-					return ip.ToString();
+					if (adapter.OperationalStatus == OperationalStatus.Up && adapter.NetworkInterfaceType == NetworkInterfaceType.Ethernet)
+					{
+						IPInterfaceProperties properties = adapter.GetIPProperties();
+						foreach (var ip in properties.UnicastAddresses)
+						{
+							if (ip.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork ){
+								//Me quedo solo con la interfaz que empiece con la iP del cespi. Sino me toma la IP de Ipv6
+								if(ip.Address.ToString().Contains("163.10"))
+								{
+									dirIP=ip.Address.ToString();
+								}
+							}
+						}
+					}
 				}
 			}
-			throw new Exception("Local IP Address Not Found!");
+			catch (Exception ex)
+			{
+				logger.logData("ERROR : Error al adquirir direccion IP.");
+				logger.logData("EXEPCION: "+ex);
+			}
+			
+			if(dirIP!="")
+			{
+				logger.logData("Direccion IP: "+dirIP);
+				return dirIP;
+			}
+			else
+			{
+				logger.logData("ERROR : Error al adquirir direccion IP.");
+				throw new Exception("Local IP Address Not Found!");
+			}
+			
+			
+			
+			
 		}
 		
 
