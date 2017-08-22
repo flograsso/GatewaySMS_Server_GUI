@@ -98,7 +98,7 @@ namespace UI_Server_GatewaySMS
 				{
 					if (closing || (timeout < Timeout.Infinite) || !Monitor.Wait(queue, timeout))
 					{
-						MessageBox.Show(timeout.ToString());
+						//MessageBox.Show(timeout.ToString());
 						value = default(T);
 						return false;
 						

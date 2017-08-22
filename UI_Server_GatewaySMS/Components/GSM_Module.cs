@@ -149,7 +149,7 @@ namespace UI_Server_GatewaySMS
 				OK=false;
 			}
 			
-			if ((sendCommand("\x1A",15,"OK")) == null){
+			if ((sendCommand("\x1A",30,"OK")) == null){
 				OK=false;
 			}
 			

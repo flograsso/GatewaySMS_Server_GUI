@@ -185,6 +185,7 @@ namespace UI_Server_GatewaySMS
 
 				// Stop the TCP/IP Server.
 				m_stopServer=true;
+				m_server.Server.Close();
 				m_server.Stop();
 
 				// Wait for one second for the the thread to stop.
@@ -371,18 +372,16 @@ namespace UI_Server_GatewaySMS
 						
 						try{
 							if(!TCPServer.serialPort.IsOpen){
-								TCPServer.serialPort.PortName=TCPServer.serialPort.PortName;
 								TCPServer.serialPort.Open();
 							}
+							gsm_module.connectSIM900();
+							gsm_module.setSignal();
+							gsm_module.prepareSMS();
 						}
 						catch(Exception e)
 						{
 							logger.logData("EXEPCION: "+e);
 						}
-						
-						gsm_module.connectSIM900();
-						gsm_module.setSignal();
-						gsm_module.prepareSMS();
 						
 					}
 					errorCount++;
@@ -680,6 +679,7 @@ namespace UI_Server_GatewaySMS
 			if(dirIP!="")
 			{
 				logger.logData("Direccion IP: "+dirIP);
+				logger.logData("Puerto: "+DEFAULT_PORT);
 				return dirIP;
 			}
 			else

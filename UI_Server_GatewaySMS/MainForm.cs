@@ -70,41 +70,46 @@ namespace UI_Server_GatewaySMS
 			this.Refresh();
 			
 			try{
+				
+				TCPServer.serialPort.PortName=textBox_serialport.Text;
+				Settings1.Default.puertoCOM=textBox_serialport.Text;
+				Settings1.Default.Save();
 				while (i < 3 && !ok)
 				{
-					
-					TCPServer.serialPort.PortName=textBox_serialport.Text;
-					Settings1.Default.puertoCOM=textBox_serialport.Text;
-					Settings1.Default.Save();
-					
+
 					restartUSBController();
 					
 					if(!TCPServer.serialPort.IsOpen){
-						TCPServer.serialPort.PortName=TCPServer.serialPort.PortName;
 						TCPServer.serialPort.Open();
-						TCPServer.logger.logData("CONECTADO AL PUERTO "+textBox_serialport.Text);
-						
+					}
+					
+					if(TCPServer.serialPort.IsOpen){
+						TCPServer.logger.logData("CONECTADO AL PUERTO "+TCPServer.serialPort.PortName);
 						if (TCPServer.gsm_module.connectSIM900() && TCPServer.gsm_module.setSignal() && TCPServer.gsm_module.prepareSMS())
 						{
 							ok=true;
+							TCPServer.logger.logData("CONECTADO AL MODULO GSM");
 						}
 						else
 						{
 							TCPServer.logger.logData("ERROR : No se pudo conectar al módulo SIM");
 						}
-						i++;
+					}
+					else
+					{
+						TCPServer.logger.logData("ERROR : No se pudo conectar al puerto COM");
+						MessageBox.Show("No se pudo conectar al puerto COM","ERROR",MessageBoxButtons.OK,MessageBoxIcon.Exclamation);
 					}
 					
+					
+					i++;
 					System.Threading.Thread.Sleep(1000);
-					
-
-					
 				}
+				
 			}
-			catch(Exception){
-				TCPServer.logger.logData("ERROR : Puerto COM Incorrecto");
-				TCPServer.logger.logData("EXEPCION: "+e);
-				MessageBox.Show("Puerto COM incorrecto","ERROR",MessageBoxButtons.OK,MessageBoxIcon.Exclamation);
+			catch(Exception ex)
+			{
+				TCPServer.logger.logData("EXEPCION: "+ex);
 			}
 			
 
@@ -113,6 +118,7 @@ namespace UI_Server_GatewaySMS
 					// Create the Server Object ans Start it.
 					server = new TCPServer();
 					server.StartServer();
+					TCPServer.logger.logData("Servidor Iniciado");
 				}
 				catch(Exception e2){
 					TCPServer.logger.logData("ERROR : Error de creacion del Server");
@@ -123,7 +129,7 @@ namespace UI_Server_GatewaySMS
 				textBox_serialport.Enabled=false;
 				label3.Text="RUNNING...";
 				TCPServer.sendErrorEmail(3);
-				TCPServer.logger.logData("CONECTADO AL MODULO GSM");
+				
 			}
 			else
 			{
@@ -132,18 +138,20 @@ namespace UI_Server_GatewaySMS
 				textBox_serialport.Enabled=true;
 				TCPServer.sendErrorEmail(2);
 				TCPServer.logger.logData("ERROR : No se pudo conectar con el modulo GSM");
+
 			}
 			
 		}
 		void MainFormFormClosed(object sender, FormClosedEventArgs e)
 		{
 			label3.Text="CERRANDO...";
-			/*Si le hago el stop y no esta creado. Se queda ahi*/
-			if (server != null && server.isServerRunning()){
-				server.StopServer();
-			}
-			/*Cierro el serial*/
 			try{
+				/*Si le hago el stop y no esta creado. Se queda ahi*/
+				if (server != null && server.isServerRunning()){
+					server.StopServer();
+				}
+				/*Cierro el serial*/
+				
 				if(TCPServer.serialPort.IsOpen){
 					TCPServer.serialPort.Close();
 				}
@@ -152,6 +160,12 @@ namespace UI_Server_GatewaySMS
 			catch (Exception ex)
 			{
 				TCPServer.logger.logData("EXEPCION: "+ex);
+			}
+			finally
+			{
+				if(TCPServer.serialPort.IsOpen){
+					TCPServer.serialPort.Close();
+				}
 			}
 			
 			
@@ -180,7 +194,7 @@ namespace UI_Server_GatewaySMS
 			pProcess.StartInfo.FileName = @AppDomain.CurrentDomain.BaseDirectory.ToString()+"\\devcon.exe";
 
 			//Execute comand "restart *deviceID*"
-			pProcess.StartInfo.Arguments = " restart *"+Settings1.Default.deviceID+"*"; 
+			pProcess.StartInfo.Arguments = " restart *"+Settings1.Default.deviceID+"*";
 
 			pProcess.StartInfo.UseShellExecute = false;
 

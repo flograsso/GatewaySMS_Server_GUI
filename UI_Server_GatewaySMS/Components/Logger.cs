@@ -41,6 +41,7 @@ namespace UI_Server_GatewaySMS
 			{
 				fs=File.Create(path + @fileName + ".txt");
 				fs.Close();
+	
 			}
 			else
 			{
@@ -55,6 +56,7 @@ namespace UI_Server_GatewaySMS
 					if (!File.Exists(path + @fileName + ".txt"))
 					{
 						fs=File.Create(path + @fileName + ".txt");
+						fs.Flush();
 						fs.Close();
 						
 					}
